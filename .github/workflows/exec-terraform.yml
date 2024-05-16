@@ -1,0 +1,51 @@
+name: Terraform Apply
+on:
+  push:
+    branches: 
+      - "feature/*"
+      - "qa"
+      - "main"
+      - "develop"
+    paths:
+      - "infrastructure/**"
+  workflow_dispatch:
+
+permissions: write-all
+
+jobs:  
+  tf_exec_sb:
+    name: tf_exec_sb
+    if: github.event_name != 'pull_request' && startsWith(github.event.ref, 'refs/heads/feature/')
+    uses: DigitalFemsa-Genesys/module-pipelines/.github/workflows/terraform-deploy-plan.yml@main
+    with:
+      ENVIRONMENT: 'develop'
+    secrets:
+      GCP_CREDENTIALS: "${{ secrets.GCP_CREDENTIALS }}"
+      GHCR_TOKEN: "${{ secrets.GHCR_TOKEN }}"
+  tf_exec_dev:
+    name: tf_exec_dev
+    if: github.event_name != 'pull_request' && github.event.ref == 'refs/heads/develop'
+    uses: DigitalFemsa-Genesys/module-pipelines/.github/workflows/terraform-deploy-plan.yml@main
+    with:
+      ENVIRONMENT: 'develop'
+    secrets:
+      GCP_CREDENTIALS: "${{ secrets.GCP_CREDENTIALS }}"
+      GHCR_TOKEN: "${{ secrets.GHCR_TOKEN }}"
+  tf_exec_qa:
+    name: tf_exec_qa
+    if: github.event_name != 'pull_request' && github.event.ref == 'refs/heads/qa'
+    uses: DigitalFemsa-Genesys/module-pipelines/.github/workflows/terraform-deploy-plan.yml@main
+    with:
+      ENVIRONMENT: 'qa'
+    secrets:
+      GCP_CREDENTIALS: "${{ secrets.GCP_CREDENTIALS }}"
+      GHCR_TOKEN: "${{ secrets.GHCR_TOKEN }}"
+  tf_exec_prd:
+    name: tf_exec_prd
+    if: github.event_name != 'pull_request' && github.event.ref == 'refs/heads/main'
+    uses: DigitalFemsa-Genesys/module-pipelines/.github/workflows/terraform-deploy-plan.yml@main
+    with:
+      ENVIRONMENT: 'production'
+    secrets:
+      GCP_CREDENTIALS: "${{ secrets.GCP_CREDENTIALS }}"
+      GHCR_TOKEN: "${{ secrets.GHCR_TOKEN }}"

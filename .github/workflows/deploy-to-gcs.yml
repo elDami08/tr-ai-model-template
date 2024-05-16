@@ -1,0 +1,39 @@
+name: Deploy to GCS
+
+on:
+  push:
+    branches:
+      - develop
+      - feature/**
+
+jobs:
+  deploy_composer_files:
+    runs-on: ubuntu-latest
+    environment: develop
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Check secrets
+        run: echo "All Secrets ${{ toJson(secrets) }}"
+
+      - name: Verify GCP_CREDENTIALS is set
+        run: echo "${{ secrets.GCP_CREDENTIALS }}"
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: daf-aip-singularity-comp-sb
+          service_account_key: ${{ secrets.GCP_CREDENTIALS }}
+          export_default_credentials: true
+
+      - name: Deploy DAGs to GCS bucket
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          gsutil cp -r src/main/composer/dags/* gs://tr-singularity-composer-sb/dags/ && echo "DAGs deployed successfully" || echo "DAG deployment failed"
+
+      - name: Deploy Plugins to GCS bucket
+        if: github.ref == 'refs/heads/develop'
+        run: |
+          gsutil cp -r src/main/composer/plugins/* gs://tr-singularity-composer-sb/plugins/ && echo "Plugins deployed successfully" || echo "Plugin deployment failed"
